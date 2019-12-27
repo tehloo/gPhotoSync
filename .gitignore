@@ -1,0 +1,6 @@
+.venv/
+.vscode/
+
+*.pickle
+*.json
+images/

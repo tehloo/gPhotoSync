@@ -6,12 +6,24 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 
+LOG_VERBOSE = True
+
+PATH_SECRET = '.creds'
+PATH_TOKEN = PATH_SECRET + '/token.pickle'
+PATH_CLIENT_SECRET = PATH_SECRET + '/client_secret.json'
+
+PATH_DUMP_LOG = './log'
+DUMP_ALBUM = PATH_DUMP_LOG + '/album.json'
+DUMP_MEDIA = PATH_DUMP_LOG + '/media.json'
+
+
+
 # Get credentials, refer below
 # https://developers.google.com/people/quickstart/python
 def getGoogleService():
     cred = None
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
+    if os.path.exists(PATH_TOKEN):
+        with open(PATH_TOKEN, 'rb') as token:
             cred = pickle.load(token)
 
     if not cred or not cred.valid:
@@ -19,7 +31,7 @@ def getGoogleService():
             cred.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'client_secret.json',
+                PATH_CLIENT_SECRET,
                 scopes=['https://www.googleapis.com/auth/photoslibrary.readonly']
             )
 
@@ -29,11 +41,11 @@ def getGoogleService():
                 success_message='The auth flow is complete; you may close this window.',
                 open_browser=True)
 
-            with open('token.pickle', 'wb') as token:
+            with open(PATH_TOKEN, 'wb') as token:
                 pickle.dump(cred, token)
 
     # Show credentials for infomation.
-    print ("Credential : " + str(cred.to_json()))
+    print("Credential : " + str(cred.to_json())) if LOG_VERBOSE else None
 
     # Get GooglePhoto service
     return build('photoslibrary', 'v1', credentials=cred)
@@ -45,7 +57,7 @@ def getAlbumIdWithName(service, name):
     resp = service.albums().list().execute()
 
     strAlbum = json.dumps(resp, sort_keys=True, indent=4)
-    with open('album.json', 'w') as album:
+    with open(DUMP_ALBUM, 'w') as album:
         album.write(strAlbum)
 
     #print(strAlbum)
@@ -65,11 +77,12 @@ def downloadFilesByAlbumId(service, album_id, path):
     resp = service.mediaItems().search(body=request).execute()
 
     # save resp for debugging.
-    strItems = json.dumps(resp, sort_keys=True, indent=4)
-    with open('items.json', 'w') as items:
-        items.write(strItems)
+    if LOG_VERBOSE:
+        strItems = json.dumps(resp, sort_keys=True, indent=4)
+        with open(DUMP_MEDIA, 'w') as items:
+            items.write(strItems)
 
-    #print(strItems)
+        print(strItems)
 
     # ready directory to save files
     if not os.path.exists(path):
@@ -107,7 +120,9 @@ def downloadFileWithUrl(url, filepath):
                 break
             f.write(block)
 
-    print(f"file saved as {filepath}")
+    if LOG_VERBOSE:
+        print(f"file saved as {filepath}")
+
     return True
 
 
@@ -115,13 +130,15 @@ def downloadFileWithUrl(url, filepath):
 # https://developers.google.com/photos/library/reference/rest/v1/mediaItems/get
 def getMediaItems(service) :
     resp = service.mediaItems().list().execute()
-    strMedia = json.dumps(resp, sort_keys=True, indent=4)
 
-    with open('media.json', 'w') as media:
-        media.write(strMedia)
+    if LOG_VERBOSE:
+        strMedia = json.dumps(resp, sort_keys=True, indent=4)
 
-    print("\n Receive completed!!!\n")
-    print(strMedia)
+        with open(DUMP_MEDIA, 'w') as media:
+            media.write(strMedia)
+
+        print("\n Receive completed!!!\n")
+        print(strMedia)
 
     # Get single items from list
     for item in resp.get('mediaItems'):
@@ -130,10 +147,12 @@ def getMediaItems(service) :
         url += '=d'
         downloadFileWithUrl(url, filename)
 
-
-
 ALBUM_NAME_TO_FIND = 'jay'
 PATH_IMAGES = './images'
+
+# FIXME: make log class later.
+if not os.path.exists(PATH_DUMP_LOG):
+    os.mkdir(PATH_DUMP_LOG)
 
 service = getGoogleService()
 album_id = getAlbumIdWithName(service, ALBUM_NAME_TO_FIND)

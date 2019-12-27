@@ -1,7 +1,5 @@
 .venv/
 .vscode/
-
-*.pickle
 images/
-.creds
-log
+.creds/
+log/

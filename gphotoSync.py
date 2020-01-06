@@ -83,7 +83,7 @@ def downloadFilesByAlbumId(service, album_id, path):
         with open(DUMP_MEDIA, 'w') as items:
             items.write(strItems)
 
-        print(strItems)
+        #print(strItems)
 
     # ready directory to save files
     if not os.path.exists(path):

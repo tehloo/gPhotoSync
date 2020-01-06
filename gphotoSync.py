@@ -28,6 +28,7 @@ def getGoogleService():
 
     if not cred or not cred.valid:
         if cred and cred.expired and cred.refresh_token:
+            print("Credential exfired. refreshing it.")
             cred.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
@@ -148,7 +149,7 @@ def getMediaItems(service) :
         downloadFileWithUrl(url, filename)
 
 ALBUM_NAME_TO_FIND = 'jay'
-PATH_IMAGES = './images'
+PATH_IMAGES = '/home/jckim/Pictures/jay'
 
 # FIXME: make log class later.
 if not os.path.exists(PATH_DUMP_LOG):

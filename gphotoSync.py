@@ -75,32 +75,40 @@ def downloadFilesByAlbumId(service, album_id, path):
         'albumId' : album_id,
         'pageSize' : 100
     }
-    resp = service.mediaItems().search(body=request).execute()
-
-    # save resp for debugging.
-    if LOG_VERBOSE:
-        strItems = json.dumps(resp, sort_keys=True, indent=4)
-        with open(DUMP_MEDIA, 'w') as items:
-            items.write(strItems)
-
-        #print(strItems)
-
-    # ready directory to save files
-    if not os.path.exists(path):
-        os.mkdir(path)
 
     result = {'skip':0, 'download':0, 'error':0}
-    for item in resp.get('mediaItems'):
-        filepath = path + '/' + item.get('filename')
-        url = item.get('baseUrl') + '=d'
+    while True:
+        resp = service.mediaItems().search(body=request).execute()
 
-        if os.path.exists(filepath):
-            print("File exist. " + filepath)
-            result['skip'] += 1
-        elif downloadFileWithUrl(url, filepath):
-            result['download'] += 1
+        # save resp for debugging.
+        if LOG_VERBOSE:
+            strItems = json.dumps(resp, sort_keys=True, indent=4)
+            with open(DUMP_MEDIA, 'w') as items:
+                items.write(strItems)
+
+            #print(strItems)
+
+        # ready directory to save files
+        if not os.path.exists(path):
+            os.mkdir(path)
+
+        for item in resp.get('mediaItems'):
+            filepath = path + '/' + item.get('filename')
+            url = item.get('baseUrl') + '=d'
+
+            if os.path.exists(filepath):
+                print("File exist. " + filepath)
+                result['skip'] += 1
+            elif downloadFileWithUrl(url, filepath):
+                result['download'] += 1
+            else:
+                result['error'] += 1
+
+        nextPageToken = resp.get('nextPageToken')
+        if nextPageToken:
+            request['pageToken'] = nextPageToken
         else:
-            result['error'] += 1
+            break
 
     print("download completed.")
     print(f" + download {result['download']} files") if result['download'] else None

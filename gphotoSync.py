@@ -156,18 +156,19 @@ def getMediaItems(service) :
         url += '=d'
         downloadFileWithUrl(url, filename)
 
-ALBUM_NAME_TO_FIND = 'jay'
-PATH_IMAGES = '/home/jckim/Pictures/jay'
+if __name__ == '__main__':
+    ALBUM_NAME_TO_FIND = 'jay'
+    PATH_IMAGES = os.path.expanduser('~/Pictures/jay')
 
-# FIXME: make log class later.
-if not os.path.exists(PATH_DUMP_LOG):
-    os.mkdir(PATH_DUMP_LOG)
+    # FIXME: make log class later.
+    if not os.path.exists(PATH_DUMP_LOG):
+        os.mkdir(PATH_DUMP_LOG)
 
-service = getGoogleService()
-album_id = getAlbumIdWithName(service, ALBUM_NAME_TO_FIND)
+    service = getGoogleService()
+    album_id = getAlbumIdWithName(service, ALBUM_NAME_TO_FIND)
 
-if album_id is None:
-    print(f"Can not find album '{ALBUM_NAME_TO_FIND}'")
-    exit
+    if album_id is None:
+        print(f"Can not find album '{ALBUM_NAME_TO_FIND}'")
+        exit
 
-downloadFilesByAlbumId(service, album_id, PATH_IMAGES)
+    downloadFilesByAlbumId(service, album_id, PATH_IMAGES)
